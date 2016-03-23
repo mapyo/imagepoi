@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ImagePoi</string>
+    <string name="upload_failed">アップロード失敗です</string>
+    <string name="upload_finished">アップロード完了しました！slackの%sチャンネルを見て下さい</string>
+    <string name="upload_started">アップロード開始します</string>
+    <string name="uploading">ファイルをアップロード中です。。。</string>
+</resources>
