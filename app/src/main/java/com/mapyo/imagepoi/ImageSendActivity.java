@@ -8,87 +8,37 @@ import android.widget.Toast;
 
 import java.io.File;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+public class ImageSendActivity extends AppCompatActivity implements ImageSendView {
 
-public class ImageSendActivity extends AppCompatActivity {
-
-    static final String ENDPOINT = "https://slack.com/";
-    private String mSlackToken;
-    private String mSlackChannel;
+    private ImageSendPresenter mPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_send);
         setTitle(getString(R.string.uploading));
-        mSlackToken = getString(R.string.slack_token);
-        mSlackChannel = getString(R.string.slack_channel);
+        String slackToken = getString(R.string.slack_token);
+        String slackChannel = getString(R.string.slack_channel);
+
+        mPresenter = new ImageSendPresenter(this);
 
         Uri imageUri = getIntent().getParcelableExtra(Intent.EXTRA_STREAM);
         File uploadFile = new File(FileUtil.getFilePath(getApplicationContext(), imageUri));
 
-        sendSlack(uploadFile);
-    }
-
-
-    private void sendSlack(File uploadFile) {
         showMessage(getString(R.string.upload_started));
-
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(new HttpLoggingInterceptor()
-                        .setLevel(
-                                BuildConfig.DEBUG ?
-                                        HttpLoggingInterceptor.Level.BODY :
-                                        HttpLoggingInterceptor.Level.BASIC
-
-                        ))
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(ENDPOINT)
-                .client(client)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        RequestBody body = RequestBody.create(MediaType.parse("image/*"), uploadFile);
-
-        retrofit.create(FileService.class)
-                .upload(mSlackToken, mSlackChannel, body)
-                .enqueue(new Callback<FilesUploadApiResponse>() {
-                    @Override
-                    public void onResponse(Call<FilesUploadApiResponse> call, Response<FilesUploadApiResponse> response) {
-                        if (response.body().mOk) {
-                            showSuccess();
-                        } else {
-                            showFailed();
-                        }
-                        finish();
-                    }
-
-                    @Override
-                    public void onFailure(Call<FilesUploadApiResponse> call, Throwable throwable) {
-                        showFailed();
-                        finish();
-                    }
-                });
+        mPresenter.sendImageToSlack(uploadFile, slackToken, slackChannel);
     }
 
-    private void showSuccess() {
-        showMessage(getString(R.string.upload_finished, mSlackChannel));
+    @Override
+    public void showSuccess(String slackChannel) {
+        showMessage(getString(R.string.upload_finished, slackChannel));
+        finish();
     }
 
-    private void showFailed() {
+    @Override
+    public void showFailed() {
         showMessage(getString(R.string.upload_failed));
+        finish();
     }
 
     private void showMessage(String message) {
