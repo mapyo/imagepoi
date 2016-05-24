@@ -11,21 +11,15 @@ public final class SlackApiClient {
     private Retrofit mRetrofit;
 
     private SlackApiClient() {
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(new HttpLoggingInterceptor()
-                        .setLevel(
-                                BuildConfig.DEBUG ?
-                                        HttpLoggingInterceptor.Level.BODY :
-                                        HttpLoggingInterceptor.Level.BASIC
-
-                        ))
-                .build();
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(
+                    new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
+        }
 
         mRetrofit = new Retrofit.Builder()
                 .baseUrl(ENDPOINT)
-                .client(client)
+                .client(builder.build())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
     }
